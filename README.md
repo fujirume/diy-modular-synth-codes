@@ -1,1 +1,1 @@
-# diy-modular-synth-codes
+hi! in this section will post my codes from arduino ide
