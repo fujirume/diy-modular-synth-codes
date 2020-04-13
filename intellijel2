@@ -1,0 +1,199 @@
+
+#include <JC_Button.h>  
+#include <SPI.h>
+#include <Wire.h>
+#include <TM1637Display.h>
+
+#define CLK 8
+#define DIO 9
+TM1637Display display(CLK, DIO);
+
+#include <MD_REncoder.h>
+
+
+
+MD_REncoder R = MD_REncoder(13, 12);
+
+
+
+int pointer=0;
+const byte BUTTON_PIN(7);          
+
+Button myBtn(BUTTON_PIN); 
+int i = 0;
+int h[5] = {1,1,1,1};
+int k;
+
+
+
+
+void setup() {
+display.clear();display.setBrightness(0x0f);
+R.begin();
+
+Serial.begin(9600);
+myBtn.begin();    
+pinMode(5, OUTPUT);
+pinMode(2, OUTPUT);
+pinMode(3, OUTPUT);
+pinMode(4, OUTPUT);
+
+display.showNumberDec(pointer+1, false, 2,0); 
+display.showNumberDec(h[pointer], false, 2,2);
+ 
+}
+
+
+void loop() {
+
+
+  
+
+
+
+
+  
+myBtn.read();  
+
+if (myBtn.wasReleased())    // if the button was released, change the LED state
+    
+  {
+//Serial.print(i);
+
+switch (i){
+  case 0: acc1();break;
+  case 1: acc2();break;
+  case 2: acc3();break;
+  case 3: acc4();break;
+}
+
+
+k = k+1;
+if (k == h[i]){i = i+1;if (i==4){i = 0;} k = 0;}
+
+
+
+
+  
+ } //fine btn released
+
+ uint8_t x = R.read();
+  if (x ==16){stepp();}
+  if (x ==32){stepm();}  
+
+
+ 
+
+
+
+
+}  //fine loop
+
+
+
+void acc1(){
+digitalWrite(2,HIGH);
+digitalWrite(3,LOW);
+digitalWrite(4,LOW);
+digitalWrite(5,LOW);
+//delay(2000);
+}
+
+void acc2(){
+digitalWrite(2,LOW);
+digitalWrite(3,HIGH);
+digitalWrite(4,LOW);
+digitalWrite(5,LOW);
+}
+
+void acc3(){
+digitalWrite(2,LOW);
+digitalWrite(3,LOW);
+digitalWrite(4,HIGH);
+digitalWrite(5,LOW);
+}
+
+void acc4(){
+digitalWrite(2,LOW);
+digitalWrite(3,LOW);
+digitalWrite(4,LOW);
+digitalWrite(5,HIGH);
+}
+
+
+
+
+void stepp(){
+pointer = pointer+1; 
+
+//switch (pointer) {
+//  
+//  case 0: digitalWrite(2,HIGH);
+//          digitalWrite(3,LOW);
+//           digitalWrite(4,LOW);
+//          digitalWrite(5,LOW);break;
+//  
+//
+//
+//  case 1:digitalWrite(2,LOW);
+//digitalWrite(3,HIGH);
+//digitalWrite(4,LOW);
+//digitalWrite(5,LOW);break;
+//
+//  case 2: digitalWrite(2,LOW);
+//digitalWrite(3,LOW);
+//digitalWrite(4,HIGH);
+//digitalWrite(5,LOW); break;
+//
+//
+//case 3: digitalWrite(2,LOW);
+//digitalWrite(3,LOW);
+//digitalWrite(4,LOW);
+//digitalWrite(5,HIGH); break;
+//  
+//  }
+
+
+
+display.showNumberDec(pointer+1, false, 2,0); 
+display.showNumberDec(h[pointer], false, 2,2); 
+}
+
+
+
+
+void stepm(){
+pointer = pointer-1; 
+display.showNumberDec(pointer+1, false, 2,0);
+display.showNumberDec(h[pointer], false, 2,2); 
+
+
+
+//
+//switch (pointer) {
+//  
+//  case 0: digitalWrite(2,HIGH);
+//          digitalWrite(3,LOW);
+//           digitalWrite(4,LOW);
+//          digitalWrite(5,LOW);break;
+//  
+//
+//
+//  case 1:digitalWrite(2,LOW);
+//digitalWrite(3,HIGH);
+//digitalWrite(4,LOW);
+//digitalWrite(5,LOW);break;
+//
+//  case 2: digitalWrite(2,LOW);
+//digitalWrite(3,LOW);
+//digitalWrite(4,HIGH);
+//digitalWrite(5,LOW); break;
+//
+//
+//case 3: digitalWrite(2,LOW);
+//digitalWrite(3,LOW);
+//digitalWrite(4,LOW);
+//digitalWrite(5,HIGH); break;
+//  
+//  }
+}
