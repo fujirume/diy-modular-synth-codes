@@ -1,0 +1,135 @@
+
+#include <JC_Button.h>  
+#include <SPI.h>
+#include <Wire.h>
+
+
+#include <MD_REncoder.h>
+
+
+
+MD_REncoder R = MD_REncoder(12, 13);
+
+
+
+int pointer=0;
+const byte BUTTON_PIN(7);          
+
+Button myBtn(BUTTON_PIN); 
+int i = 1;
+int b = 0;
+int A[5] = {0,1,2,3,4};
+
+
+
+
+void setup() {
+R.begin();
+
+Serial.begin(9600);
+myBtn.begin();    
+pinMode(5, OUTPUT);
+pinMode(2, OUTPUT);
+pinMode(3, OUTPUT);
+pinMode(4, OUTPUT);
+
+
+
+
+}
+
+
+void loop() {
+
+
+  
+  uint8_t x = R.read();
+  if (x ==16){stepp();}
+  if (x ==32){stepm();}  
+
+
+
+  
+myBtn.read();  
+
+if (myBtn.wasReleased())    // if the button was released, change the LED state
+    
+  {
+Serial.print(i);
+
+switch (i){
+  case 1: acc1();break;
+  case 2: acc2();break;
+  case 3: acc3();break;
+  case 4: acc4();break;
+}
+
+
+
+
+
+i = i+1;
+if (i==5){i = 1;}
+if (i==0){i = 4;}
+
+ }
+
+
+
+    
+
+
+
+
+}
+
+
+
+void acc1(){
+digitalWrite(2,HIGH);
+digitalWrite(3,LOW);
+digitalWrite(4,LOW);
+digitalWrite(5,LOW);
+//delay(2000);
+}
+
+void acc2(){
+digitalWrite(2,LOW);
+digitalWrite(3,HIGH);
+digitalWrite(4,LOW);
+digitalWrite(5,LOW);
+}
+
+void acc3(){
+digitalWrite(2,LOW);
+digitalWrite(3,LOW);
+digitalWrite(4,HIGH);
+digitalWrite(5,LOW);
+}
+
+void acc4(){
+digitalWrite(2,LOW);
+digitalWrite(3,LOW);
+digitalWrite(4,LOW);
+digitalWrite(5,HIGH);
+}
+
+
+
+
+void stepp(){
+pointer = pointer+1; 
+
+
+}
+
+
+
+
+void stepm(){
+pointer = pointer-1; 
+
+
+
+
+}
