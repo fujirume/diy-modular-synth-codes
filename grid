@@ -1,0 +1,150 @@
+#include <JC_Button.h>  
+#include <Wire.h>
+#include <SPI.h>
+#include <MD_REncoder.h>
+MD_REncoder R = MD_REncoder(11, 12);
+const byte BUTTON_PIN(7);
+Button myBtn(BUTTON_PIN);  
+
+unsigned long puls1ontime;  unsigned long puls2ontime;
+bool puls1on;               bool puls2on;
+
+int A[9]={1,0,0,0,1,0,0,0,0};
+int B[9]={1,1,1,1,1,1,1,1,1};
+
+
+int P1[9]={1,1,1,1,1,1,1,1,1};
+int P2[9]={1,0,1,0,1,0,1,0,1};
+int vala=0;
+int i = 0;
+int seq1=2;
+int seq2=3;
+int valpot1=0;
+int valpot2=0;
+int k1=0;
+
+void setup() {
+R.begin();
+pinMode(8, OUTPUT);
+pinMode(9, OUTPUT);
+pinMode(A0, INPUT);
+
+myBtn.begin();    
+puls1on = false;
+puls2on = false;
+
+Serial.begin(9600);
+}
+
+
+
+
+void loop() {
+myBtn.read(); 
+valpot1 = map(analogRead(A0), 0, 1023, 1,7);
+valpot2 = map(analogRead(A1), 0, 1023, 1,7);
+if(valpot1<4){unouno();}
+if(valpot1>=4){unodue();}
+
+
+
+
+
+if (myBtn.wasReleased())   {
+vala = A[i];
+
+
+
+
+switch (valpot2){
+  
+ 
+ 
+  case 1:break;
+  case 2:if (vala==1 && i ==3){suona();}break;
+  case 3:if (vala==1 && i ==3) {suona();}   if (vala==1 && i ==7){suona();}break;
+  case 4:if (vala==1){suona();}break;
+  case 5:if (vala==1 || i ==3){suona();}break;
+  case 6:if (vala==1 || i ==3 || i ==7){suona();}break;
+  case 7:suona();break;}
+
+
+Serial.print(valpot2);
+
+
+
+
+i = i+1; if (i==8){i = 0;}
+}
+
+
+
+if(puls1on) 
+    if(millis() - puls1ontime > 66) {
+      digitalWrite(8, LOW);
+      puls1on = false;} 
+}
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+      
+
+
+
+void unouno(){
+  
+  
+  A[0]=1;
+  A[1]=1;
+  A[2]=1;
+  A[3]=1;
+
+  A[4]=1;
+  A[5]=1;
+  A[6]=1;
+  A[7]=1;
+  
+  
+  }
+
+
+void unodue(){
+  
+  A[0]=1;
+  A[1]=0;
+  A[2]=1;
+  A[3]=0;
+
+  A[4]=1;
+  A[5]=0;
+  A[6]=1;
+  A[7]=0;  
+  
+}
+
+
+void suona(){
+  
+      puls1on = true;
+      puls1ontime = millis();
+      digitalWrite(8, HIGH);}
+
+
+
+
+
+
+  
