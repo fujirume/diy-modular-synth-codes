@@ -1,0 +1,346 @@
+#include <MD_REncoder.h>
+#include <JC_Button.h>
+#include <Arduino.h>
+#include <TM1637Display.h>
+#define CLK 12
+#define DIO 11
+const byte BUTTON_PIN(10),
+           EXTCLOCK (A3);
+           
+const uint8_t SEG_PATT[] = {
+  SEG_E | SEG_F | SEG_A | SEG_B | SEG_G,           
+  SEG_E | SEG_F | SEG_A | SEG_B | SEG_C | SEG_G,  
+  SEG_F | SEG_G | SEG_E | SEG_D ,                           
+  SEG_F | SEG_G | SEG_E | SEG_D              
+  };
+const uint8_t SEG_SPEE[] = {
+  SEG_A | SEG_F | SEG_G | SEG_C | SEG_D,           
+  SEG_E | SEG_F | SEG_A | SEG_B | SEG_G,  
+  SEG_A | SEG_G | SEG_D | SEG_E | SEG_F,                              
+  SEG_A | SEG_G | SEG_D | SEG_E | SEG_F           
+  };
+
+const uint8_t SEG_STEP[] = {
+  SEG_A | SEG_F | SEG_G | SEG_C | SEG_D,           
+  SEG_F | SEG_G | SEG_E | SEG_D ,   
+  SEG_A | SEG_G | SEG_D | SEG_E | SEG_F,                              
+  SEG_E | SEG_F | SEG_A | SEG_B | SEG_G          
+  };
+
+const uint8_t SEG_SYNC[] = {
+  SEG_A | SEG_F | SEG_G | SEG_C | SEG_D,           
+  SEG_F | SEG_G | SEG_B | SEG_D | SEG_C ,   
+  SEG_E | SEG_F | SEG_A | SEG_B | SEG_C ,                             
+  SEG_A | SEG_F | SEG_E | SEG_D      
+  };
+
+const uint8_t SEG_INT[] = {
+  SEG_C ,           
+  SEG_E | SEG_G | SEG_C,    
+  SEG_F | SEG_G | SEG_E | SEG_D,
+  SEG_D                              
+        
+  };
+  
+const uint8_t SEG_EST[] = {
+  SEG_A | SEG_G | SEG_D | SEG_E | SEG_F,           
+  SEG_A | SEG_F | SEG_G | SEG_C | SEG_D,   
+  SEG_F | SEG_G | SEG_E | SEG_D,
+  SEG_D      
+  };
+
+
+const uint8_t SEG_RNDM[] = {
+  SEG_E | SEG_G ,           
+  SEG_E | SEG_G | SEG_C,   
+  SEG_D | SEG_E | SEG_G | SEG_B | SEG_C,
+  SEG_D      
+  };  
+
+const byte interruptPin = 2;
+
+
+Button extclock(EXTCLOCK);
+Button myBtn(BUTTON_PIN);
+TM1637Display display(CLK, DIO);
+const int ledPin =  A1;      
+int i;
+int b;
+int ledState = LOW;             
+long previousMillis = 0;        
+int patcount = 0;
+unsigned long currentMillis ;
+int buttcounter = 0;
+int lung = 8;
+int A[4][16] = {{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15},
+               {1,2,2,1,11,10,9,8,7,6,5,4,3,2,1,0},
+               {2,2,2,1,11,10,9,8,7,6,5,4,3,2,1,0},
+               {2,2,1,1,11,10,9,8,7,6,5,4,3,2,1,0},
+               
+               
+               
+               };
+
+int modalita=0;
+
+int k = 0;
+
+
+
+
+
+long interval = 100;           
+MD_REncoder R = MD_REncoder(8, 9);
+int x;
+
+
+
+void setup() {
+Serial.begin(9600);
+  pinMode(interruptPin, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(interruptPin), esternal, RISING);
+extclock.begin();
+myBtn.begin();
+display.setBrightness(0);
+display.clear();
+display.showNumberDec(patcount+1,false);
+  
+  R.begin();
+  pinMode(ledPin, OUTPUT); 
+
+  pinMode(3, OUTPUT); 
+  pinMode(4, OUTPUT); 
+  pinMode(5, OUTPUT);   
+  pinMode(6, OUTPUT);    
+}
+
+void loop(){
+  
+  myBtn.read(); 
+extclock.read();
+
+  
+  if (myBtn.wasReleased())    
+    {
+        buttcounter = buttcounter + 1;
+        if (buttcounter == 4){buttcounter = 0;}
+        
+
+        switch (buttcounter){
+          case 0:display.setSegments(SEG_PATT); break;
+          case 1:display.setSegments(SEG_SPEE); break;
+          case 2:display.setSegments(SEG_STEP); break;
+          case 3:display.setSegments(SEG_SYNC); break;
+          
+          }
+        
+    }
+
+    
+      x = R.read();
+
+    switch (x){
+    case 16 : 
+    
+          switch (buttcounter){
+             case 0: patp(); break;
+             case 1: bpmm();break;
+             case 2: i = 0; lung = lung+1;display.showNumberDec(lung,false); break;
+             case 3: modalita = 0; display.setSegments(SEG_INT); break;
+            } break;
+    
+    
+    
+    
+    case 32 :     
+            switch (buttcounter){
+             case 0: patm(); break;
+             case 1: bpmp();break;
+             case 2: i = 0; lung = lung-1; display.showNumberDec(lung,false); break;
+             case 3: modalita = 1; display.setSegments(SEG_EST); break;
+            } break;
+    }
+
+
+
+
+
+  if (modalita==0){internal();}
+  
+
+
+  
+  
+
+
+
+
+
+
+} //loop
+
+
+
+void acc0(){  digitalWrite(6, LOW);digitalWrite(3, LOW);digitalWrite(4, LOW);digitalWrite(5, LOW);    }
+void acc1(){  digitalWrite(6, LOW);digitalWrite(3, LOW);digitalWrite(4, LOW);digitalWrite(5, HIGH);    }
+void acc2(){  digitalWrite(6, LOW);digitalWrite(3, LOW);digitalWrite(4, HIGH);digitalWrite(5, LOW);   }
+void acc3(){  digitalWrite(6, LOW);digitalWrite(3, LOW);digitalWrite(4, HIGH);digitalWrite(5, HIGH);     }
+void acc4(){  digitalWrite(6, LOW);digitalWrite(3, HIGH);digitalWrite(4, LOW);digitalWrite(5, LOW);   }
+void acc5(){  digitalWrite(6, LOW);digitalWrite(3, HIGH);digitalWrite(4, LOW);digitalWrite(5, HIGH);   }
+void acc6(){  digitalWrite(6, LOW);digitalWrite(3, HIGH);digitalWrite(4, HIGH);digitalWrite(5, LOW);   }
+void acc7(){  digitalWrite(6, LOW);digitalWrite(3, HIGH);digitalWrite(4, HIGH);digitalWrite(5, HIGH);   }
+void acc8(){  digitalWrite(6, HIGH);digitalWrite(3, LOW);digitalWrite(4, LOW);digitalWrite(5, LOW);   }
+void acc9(){  digitalWrite(6, HIGH);digitalWrite(3, LOW);digitalWrite(4, LOW);digitalWrite(5, HIGH);   }    
+void acc10(){ digitalWrite(6, HIGH);digitalWrite(3, LOW);digitalWrite(4, HIGH);digitalWrite(5, LOW);     }
+void acc11(){ digitalWrite(6, HIGH);digitalWrite(3, LOW);digitalWrite(4, HIGH);digitalWrite(5, HIGH);    }
+void acc12(){ digitalWrite(6, HIGH);digitalWrite(3, HIGH);digitalWrite(4, LOW);digitalWrite(5, LOW);     }
+void acc13(){ digitalWrite(6, HIGH);digitalWrite(3, HIGH);digitalWrite(4, LOW);digitalWrite(5, HIGH);     }
+void acc14(){ digitalWrite(6, HIGH);digitalWrite(3, HIGH);digitalWrite(4, HIGH);digitalWrite(5, LOW);     }
+void acc15(){ digitalWrite(6, HIGH);digitalWrite(3, HIGH);digitalWrite(4, HIGH);digitalWrite(5, HIGH);     }
+
+
+
+
+
+
+void test(){
+
+
+  if (patcount >=0){
+      switch (A[patcount][i]) {
+        case 0: acc0();break;
+        case 1: acc1();break;
+        case 2: acc2();break;
+        case 3: acc3();break;
+        case 4: acc4();break;
+        case 5: acc5();break;
+        case 6: acc6();break;
+        case 7: acc7();break;
+        case 8: acc8();break;
+        case 9: acc9();break;
+        case 10: acc10();break;
+        case 11: acc11();break;
+        case 12: acc12();break;
+        case 13: acc13();break;
+        case 14: acc14();break;
+        case 15: acc15();break;
+     } }
+    else { 
+
+    b = random(0,lung);
+    Serial.print(b);
+      
+       switch (b) {
+        case 0: acc0();break;
+        case 1: acc1();break;
+        case 2: acc2();break;
+        case 3: acc3();break;
+        case 4: acc4();break;
+        case 5: acc5();break;
+        case 6: acc6();break;
+        case 7: acc7();break;
+        case 8: acc8();break;
+        case 9: acc9();break;
+        case 10: acc10();break;
+        case 11: acc11();break;
+        case 12: acc12();break;
+        case 13: acc13();break;
+        case 14: acc14();break;
+        case 15: acc15();break;
+     } 
+      
+      
+      
+      
+      
+      }
+
+
+     
+     }
+ void patp(){patcount = patcount+1;
+              
+                if (patcount==-1){display.setSegments(SEG_RNDM); }
+ 
+                  else{
+                  display.showNumberDec(patcount+1,false); }
+ 
+ 
+ }
+
+ void patm(){patcount = patcount-1;
+              
+                if (patcount==-1){display.setSegments(SEG_RNDM); }
+ 
+                  else{
+                  display.showNumberDec(patcount+1,false); }
+ 
+ 
+ }
+
+ void bpmp(){  interval = interval + 5; display.showNumberDec(interval,false);}
+
+ void bpmm(){ interval = interval - 5;display.showNumberDec(interval,false);}
+
+
+
+
+
+
+
+
+
+void internal (){
+
+
+  currentMillis = millis();
+ 
+  if(currentMillis - previousMillis > interval) {
+    previousMillis = currentMillis;   
+
+    if (ledState == LOW){
+      ledState = HIGH;
+
+          test();
+
+
+    if (patcount>=0){
+    
+    i = i+1;
+    if ( i == lung) {i = 0;}
+    }
+
+    }
+
+
+    
+    else ledState = LOW; digitalWrite(ledPin, ledState);
+  }}
+
+
+
+  void esternal(){
+  
+   if (modalita ==1){ 
+    test();
+    i = i+1;
+    if ( i == lung) {i = 0;}
+   }
+    }
+  
+  
+      
+    
+      
+
+    
+
+
+        
+    
+  
+
+
+
+
+
